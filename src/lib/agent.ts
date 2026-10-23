@@ -30,7 +30,7 @@ How to work:
 2. Once you've reproduced it, call update_hypotheses with two to four candidate causes. Call it again whenever evidence rules one out or confirms one.
 3. Follow the evidence along the dependency chain from the user inward. Check the change log: recent changes often explain an outage, but not every change is guilty.
 4. Don't change anything until you have evidence for the cause. Restarting things at random is not acceptable. Every fix pauses for a person's approval automatically.
-5. Prefer the smallest fix that restores service. After it's applied, run run_synthetic_check again to verify. If the check still fails, keep investigating.
+5. Restore service first, with the smallest safe fix from the tools you have: free_disk_space, restart_service, renew_certificate, update_dns_record, resync_clock, clear_stale_sessions. Deeper repairs you can't make with these tools (fixing a mount, changing a config, reverting a change) go in the postmortem's action items. If a fix is rejected, pick another of these tools; don't give up while a reasonable fix is available. After a fix, run run_synthetic_check again to verify. If the check still fails, keep investigating.
 6. Finish by calling submit_postmortem exactly once. Name the root cause and the trigger separately, and include action items that would stop it happening again.
 
 Every diagnostic and fix needs a reason: one plain sentence a hiring manager watching could follow. Don't write text between tool calls; the reasons and hypotheses carry your thinking. Aim to resolve the incident in fewer than 20 tool calls. If a fix is denied, look for another safe option or document the incident as unresolved.`;
@@ -184,7 +184,12 @@ export async function advance(state: RunState, emit: Emit): Promise<void> {
       }
 
       if (call.name === "update_hypotheses") {
-        const list = (Array.isArray(input.hypotheses) ? input.hypotheses : []).slice(0, 5) as Hypothesis[];
+        const raw = (Array.isArray(input.hypotheses) ? input.hypotheses : []).slice(0, 5) as Hypothesis[];
+        const list = raw.map((h) => ({
+          ...h,
+          likelihood: String(h.likelihood).toLowerCase() as Hypothesis["likelihood"],
+          status: String(h.status).toLowerCase() as Hypothesis["status"],
+        }));
         state.hypotheses = list;
         emit({ type: "hypotheses", hypotheses: list });
         push(state, emit, {

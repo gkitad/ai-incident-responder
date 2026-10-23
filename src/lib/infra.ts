@@ -724,8 +724,16 @@ const SERVICES: Record<ServerId, string[]> = {
 type Input = Record<string, unknown>;
 const s = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 
+const FIX_HINT =
+  " Available fixes: free_disk_space, restart_service, renew_certificate, update_dns_record, resync_clock, clear_stale_sessions.";
+
 /** Returns a problem with the fix's input, or null if it can be sent for approval. */
 export function validateFix(inf: Infra, tool: string, input: Input): string | null {
+  const problem = checkFix(inf, tool, input);
+  return problem ? problem + FIX_HINT : null;
+}
+
+function checkFix(inf: Infra, tool: string, input: Input): string | null {
   const node = nodeFrom(s(input.node));
   switch (tool) {
     case "restart_service":

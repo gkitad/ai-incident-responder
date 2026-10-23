@@ -41,7 +41,7 @@ export const FIXES = new Set([
   "clear_stale_sessions",
 ]);
 
-export const tools: Anthropic.Tool[] = [
+const definitions: Anthropic.Tool[] = [
   {
     name: "get_topology",
     description: "List every node in the CRM stack with its address, role and dependencies.",
@@ -96,7 +96,6 @@ export const tools: Anthropic.Tool[] = [
       properties: {
         hypotheses: {
           type: "array",
-          maxItems: 5,
           items: {
             type: "object",
             properties: {
@@ -182,6 +181,27 @@ export const tools: Anthropic.Tool[] = [
     },
   },
 ];
+
+// Strict mode makes the API guarantee every tool input matches its schema
+// (grammar-constrained sampling), which strict mode requires to be closed.
+type Schema = Record<string, unknown>;
+function closed(schema: Schema): Schema {
+  const out: Schema = { ...schema };
+  if (out.type === "object") {
+    out.additionalProperties = false;
+    out.properties = Object.fromEntries(
+      Object.entries((out.properties ?? {}) as Record<string, Schema>).map(([k, v]) => [k, closed(v)]),
+    );
+  }
+  if (out.type === "array" && out.items) out.items = closed(out.items as Schema);
+  return out;
+}
+
+export const tools: Anthropic.Tool[] = definitions.map((t) => ({
+  ...t,
+  strict: true,
+  input_schema: closed(t.input_schema as Schema) as Anthropic.Tool.InputSchema,
+}));
 
 export const LABELS: Record<string, string> = {
   get_topology: "Map the stack",
