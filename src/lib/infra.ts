@@ -584,7 +584,18 @@ function scenarioLogs(inf: Infra, node: ServerId): { lines: Line[]; health: Heal
 
 export function readLogs(inf: Infra, node: ServerId, now: number): Result {
   const sc = scenarioLogs(inf, node);
-  const timed: [number, string][] = [...BASE_LOGS[node], ...sc.lines].map(([m, t], i) => [minutesAgo(inf, m, Math.max(0, 50 - i * 3)), t]);
+  // Routine lines that would contradict the injected fault are left out.
+  const contradicts: Partial<Record<ScenarioId, string[]>> = {
+    "db-disk-full": ["POST /orders 201", "0.2% 5xx"],
+    "cert-expired": ["0.2% 5xx"],
+    "dns-stale": ["0.2% 5xx", "2 of 2 servers UP"],
+    "app-oom": ["0.2% 5xx", "2 of 2 servers UP", "POST /orders 201", "GET /dashboard 200 84ms"],
+    "idp-clock": ["POST /orders 201"],
+    "vpn-pool": ["61 active sessions", "disconnected (idle)"],
+  };
+  const skip = contradicts[inf.scenario] ?? [];
+  const base = BASE_LOGS[node].filter(([, t]) => !skip.some((x) => t.includes(x)));
+  const timed: [number, string][] = [...base, ...sc.lines].map(([m, t], i) => [minutesAgo(inf, m, Math.max(0, 50 - i * 3)), t]);
   const active = faultActive(inf);
 
   // Errors that keep happening while the fault is live.

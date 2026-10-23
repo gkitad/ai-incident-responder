@@ -115,6 +115,39 @@ export function publicView(state: RunState): View {
   };
 }
 
+const PM_TEXT = ["title", "severity", "status", "summary", "root_cause", "trigger", "impact", "resolution"] as const;
+
+/**
+ * Smaller models occasionally leak tool-call markup into a string field
+ * ("...</root_cause>\n<parameter name="trigger">..."), swallowing the fields
+ * after it. Split those back out so the postmortem always renders.
+ */
+export function repairPostmortem(input: Record<string, unknown>): Postmortem {
+  const out: Record<string, unknown> = { ...input };
+  const leak = /<\/[a-z_]+>\s*<parameter name="([a-z_]+)">/;
+  for (let pass = 0; pass < 12; pass++) {
+    const key = Object.keys(out).find((k) => typeof out[k] === "string" && leak.test(out[k] as string));
+    if (!key) break;
+    const text = out[key] as string;
+    const m = text.match(leak)!;
+    out[key] = text.slice(0, m.index).trim();
+    const rest = text.slice((m.index ?? 0) + m[0].length);
+    if (!out[m[1]] || out[m[1]] === "") out[m[1]] = rest.replace(/<\/[a-z_]+>\s*$/, "").trim();
+  }
+  for (const k of ["timeline", "action_items"]) {
+    if (typeof out[k] === "string") {
+      try {
+        out[k] = JSON.parse((out[k] as string).replace(/<\/[a-z_]+>[\s\S]*$/, ""));
+      } catch {
+        out[k] = [];
+      }
+    }
+    if (!Array.isArray(out[k])) out[k] = [];
+  }
+  for (const k of PM_TEXT) if (typeof out[k] !== "string") out[k] = "";
+  return out as unknown as Postmortem;
+}
+
 export type Emit = (msg: StreamMessage) => void;
 
 let counter = 0;
@@ -177,7 +210,7 @@ export async function advance(state: RunState, emit: Emit): Promise<void> {
       const target = targetOf(call.name, input);
 
       if (call.name === "submit_postmortem") {
-        push(state, emit, { id: eid(), type: "postmortem", postmortem: input as unknown as Postmortem });
+        push(state, emit, { id: eid(), type: "postmortem", postmortem: repairPostmortem(input) });
         state.messages.push(toolResult(call.id, "Postmortem filed. Incident closed."));
         state.done = true;
         return;

@@ -29,6 +29,21 @@ Each fault has a realistic trigger, symptoms that show up several layers away fr
 - **Stateless and tamper-proof.** The whole run (conversation, injected fault, step budget) travels with the browser, compressed and encrypted with AES-256-GCM (`src/lib/state.ts`). Visitors can't read the Mystery answer or edit the history between requests.
 - **Live streaming**: the API streams newline-delimited JSON, so each step, map update and hypothesis change appears as it happens.
 
+## Live evaluation
+
+Each fault was run end to end against the deployed app with Claude Haiku 5.5, approving every change the agent proposed:
+
+| Fault | Service restored | Tool calls | Changes made | Agent time |
+| --- | --- | --- | --- | --- |
+| Database disk full | Yes | 8 | 1 | 46 s |
+| Expired TLS certificate | Yes | 8 | 1 | 28 s |
+| Stale DNS record | Yes | 9 | 1 | 25 s |
+| Crashed app server | Yes | 9 | 1 | 24 s |
+| SSO clock drift | Yes | 6 | 1 | 21 s |
+| VPN address pool exhausted | Yes | 5 | 1 | 18 s |
+
+Six of six restored with one change each, no unnecessary restarts. An earlier run of the database fault correctly diagnosed the cause but gave up after proposing a fix it didn't have a tool for; the prompt now tells it to restore service with the tools it has and put deeper repairs in the action items, and rejected fixes list the alternatives.
+
 ## Running locally
 
 ```bash
