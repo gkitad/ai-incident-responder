@@ -1,12 +1,12 @@
 /**
  * Replaces long dashes (em and en) in model output with plain punctuation,
- * so nothing on the page uses them. Number ranges like 9–5 become 9-5.
+ * so nothing on the page uses them. Number ranges get a hyphen, like 9-5.
  */
 export function plain<T>(value: T): T {
   if (typeof value === "string") {
     return value
-      .replace(/(\d)\s*[–—]\s*(\d)/g, "$1-$2")
-      .replace(/\s*[–—]\s*/g, ", ") as T;
+      .replace(/(\d)\s*[\u2013\u2014]\s*(\d)/g, "$1-$2")
+      .replace(/\s*[\u2013\u2014]\s*/g, ", ") as T;
   }
   if (Array.isArray(value)) return value.map(plain) as T;
   if (value && typeof value === "object") {
