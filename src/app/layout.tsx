@@ -7,7 +7,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Incident Responder",
   description:
-    "Break something in a simulated company network and watch an AI on-call engineer reproduce the problem, follow the evidence to the root cause, fix it with your approval and write the postmortem. Built by Anthony Jaimez with the Claude API.",
+    "Break something in a simulated company network and watch an AI on-call engineer find the cause, ask before fixing it and write up what happened. Built by Anthony Jaimez with the Claude API.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

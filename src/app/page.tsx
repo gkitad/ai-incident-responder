@@ -149,9 +149,9 @@ export default function Home() {
                 Watch the AI <em>fix it.</em>
               </h1>
               <p className={styles.heroText}>
-                Inject a failure into a simulated company network. An AI on-call engineer gets only the user&apos;s
-                complaint. It has to reproduce the problem, follow the evidence to the root cause, fix it with your
-                approval, and write the postmortem.
+                Pick a failure and it gets injected into a simulated company network. The AI on-call engineer only
+                sees the user&apos;s complaint. It has to reproduce the problem, follow the evidence to the cause, ask
+                you before fixing anything and write up what happened.
               </p>
             </div>
             <NetworkMap map={{}} focus={null} healthy />
@@ -184,9 +184,8 @@ export default function Home() {
               ))}
             </ul>
             <p className={styles.fine}>
-              Every server, log line and change here is simulated, and every fix waits for you to approve it. The
-              agent runs on the Claude API and sees the network only through the same tools an on-call engineer would
-              use.
+              The servers, logs and changes here are all simulated. Every fix waits for your approval, and the agent
+              only sees the network through the same tools an on-call engineer would use.
             </p>
           </section>
         </main>

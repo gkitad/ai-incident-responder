@@ -1,3 +1,4 @@
+import { plain } from "./plain";
 import Anthropic from "@anthropic-ai/sdk";
 import { randomInt } from "node:crypto";
 import {
@@ -33,14 +34,14 @@ How to work:
 5. Restore service first, with the smallest safe fix from the tools you have: free_disk_space, restart_service, renew_certificate, update_dns_record, resync_clock, clear_stale_sessions. Deeper repairs you can't make with these tools (fixing a mount, changing a config, reverting a change) go in the postmortem's action items. If a fix is rejected, pick another of these tools; don't give up while a reasonable fix is available. After a fix, run run_synthetic_check again to verify. If the check still fails, keep investigating.
 6. Finish by calling submit_postmortem exactly once. Name the root cause and the trigger separately, and include action items that would stop it happening again.
 
-Every diagnostic and fix needs a reason: one plain sentence a hiring manager watching could follow. Don't write text between tool calls; the reasons and hypotheses carry your thinking. Aim to resolve the incident in fewer than 20 tool calls. If a fix is denied, look for another safe option or document the incident as unresolved.`;
+Every diagnostic and fix needs a reason: one plain sentence a hiring manager watching could follow. Don't write text between tool calls; the reasons and hypotheses carry your thinking. Aim to resolve the incident in fewer than 20 tool calls. If a fix is denied, look for another safe option or document the incident as unresolved. Write the way an engineer on the team would, and don't use long dashes; use commas, periods or parentheses.`;
 
 let client: Anthropic | null = null;
 
 async function callModel(state: RunState): Promise<Pick<Anthropic.Message, "content" | "stop_reason">> {
   if (process.env.MOCK_AGENT === "1") return mockModel(state);
   client ??= new Anthropic();
-  return client.messages.create({
+  const response = await client.messages.create({
     model: MODEL,
     max_tokens: 3000,
     system: SYSTEM,
@@ -48,6 +49,8 @@ async function callModel(state: RunState): Promise<Pick<Anthropic.Message, "cont
     tool_choice: { type: "auto", disable_parallel_tool_use: true },
     messages: state.messages,
   });
+  // Keep long dashes out of everything shown on the page (reasons, hypotheses, the postmortem).
+  return { ...response, content: plain(response.content) };
 }
 
 const timeFmt = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/Chicago" });
