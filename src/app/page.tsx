@@ -9,7 +9,7 @@ import Postmortem from "@/components/Postmortem";
 import { SCENARIOS, type ScenarioId } from "@/lib/infra";
 import type { StreamMessage, View } from "@/lib/types";
 
-const PORTFOLIO = "https://portfolio-eosin-delta-24.vercel.app/";
+const PORTFOLIO = "https://www.anthonyjaimez.com/";
 const SOURCE = "https://github.com/gkitad/ai-incident-responder";
 
 async function stream(body: unknown, onMessage: (m: StreamMessage) => void) {

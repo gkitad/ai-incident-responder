@@ -6,7 +6,7 @@ You pick a failure to inject, or let **Mystery mode** pick one and hide it from 
 
 **Live demo:** https://ai-incident-responder.vercel.app/
 
-Built by [Anthony Jaimez](https://portfolio-eosin-delta-24.vercel.app/), from years of being the person who gets that ticket.
+Built by [Anthony Jaimez](https://www.anthonyjaimez.com/), from years of being the person who gets that ticket.
 
 ## The faults
 
